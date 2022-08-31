@@ -10,8 +10,11 @@
 #include<functional>
 #include<iostream>
 
-
 #pragma region 排序算法
+
+//荷兰国旗问题，红白蓝国旗，给错综复杂的条，让你排序
+//其实就是重复元素排序的问题
+//快速排序就是解决很多次的国旗问题
 
 ///快排三重循环，头要小于尾；交换之后基准会变化，所以基准的值 意义不大
 ///还要保证在同一个位置的时候不会发生交换的问题。并且基准取得值不能再头和尾
@@ -68,13 +71,7 @@ T *quickSortThreeTerms(T *array,size_t begin,size_t end){
         quickSortThreeTerms(array,begin,n-1);
     
     quickSortThreeTerms(array,n+1,end);
-
 }
-
-
-//荷兰国旗问题，红白蓝国旗，给错综复杂的条，让你排序
-//其实就是重复元素排序的问题
-//上面的快速排序就是解决很多次的国旗问题
 
 
 
@@ -151,7 +148,9 @@ void BucketSort(T A[],int left,int right){
         
     }
 }
+#pragma endregion
 
+#pragma region 检索算法
 ///二分查找，判定条件就是头和尾还在一前一后或者重合的时候。
 //取出重复只需要在找到之后左右遍历一下就好了
 template<class T>
@@ -221,7 +220,7 @@ std::vector<T> InsertionSearch(T *array,size_t low,size_t high,size_t flag){
 //
 #pragma endregion
 
-#pragma region 哈希表构建
+#pragma region 哈希表相关算法
 ///哈希插入函数，链表法的时候里面存的就是一个
 //链表的形势
 enum FlagTyte{
@@ -346,11 +345,134 @@ public:
     }
 };
 
+#include <unordered_map>
+/**
+ * @brief LRU, one algorithm which was usually used in the memory manager
+ *  to storge the data with the limited space.
+ *  Insert the node into the left edge, and if the existed node 
+ *  be required, move it the left edge. If the list is full, 
+ *  change the rightmost one. 
+ * 
+ */
+typedef struct lru_node
+{
+    void* value;
+
+    struct lru_node* left;
+    struct lru_node* right;
+}LRUNode;
+
+class LRUCache
+{
+private:
+    //the number of LRUNode
+    uint32_t cnt;
+    //the capacity of the map
+    uint32_t capacity;
+
+    //can be replaced by list and list::iterator
+    LRUNode* head;
+    LRUNode* tail;
+
+    //the map
+    std::unordered_map<int, LRUNode> hashmap{};
+private:
+    void mvLeftMost(LRUNode* node){
+        node->left->right = node->right;
+        node->right->left = node->left;
+        node->left = nullptr;
+        node->right = nullptr;
+        
+        //insert a new one into list
+        if(this->head == node){
+            
+        }else if(this->tail == node){
+            this->tail->left->right = nullptr;
+            this->tail = node->left;
+
+            node->left = nullptr;
+            node->right = this->head;
+            this->head->left = node;
+            this->head = node;
+        }else{
+            node->right = this->head;
+            this->head->left = node;
+            this->head = node;
+        }
+    }
+
+    //Inserting into the most right when adding a new one
+    void MoveToRight(LRUNode* node){
+        if(this->head == nullptr){
+            this->head = node;
+            this->tail = node;
+        }
+        else{
+            //storage is less than the capacity
+            //insert into the tail
+            if(this->cnt < this->capacity){
+                this->tail->right = node;
+                node->left = this->tail;
+                this->tail = node;
+            }else{//replace the tail one
+                node->left = this->tail->left;
+                node->right = this->tail->right;
+                this->tail = node;
+            }
+        }
+    }
+
+public: 
+    explicit LRUCache(int _cap) {
+        if(_cap <= 1)
+            std::cout << "Please set the capacity more than one" << std::endl;
+        else
+            this->capacity = _cap;
+    }
+
+    int putValue(int key, void* value)
+    {
+        //judge the storage and is exist or not
+        if((this->cnt >= this->capacity) || (hashmap.find(key) != hashmap.end()))
+            return -1;
+        
+        LRUNode* node = new LRUNode();
+        MoveToRight(node);
+        return 0;
+    }
+
+    void* getValue(int key)
+    {
+        if(hashmap.find(key) == hashmap.end())
+        {
+            return NULL;
+        }
+        LRUNode* node = &hashmap.at(key);
+        mvLeftMost(node);
+        return node->value;
+    }
+
+    int deleteValue(int key){
+        LRUNode* node = nullptr;
+        if(hashmap.find(key) != hashmap.end()){
+            node = &hashmap.at(key);
+            if(node->left != nullptr)
+                node->left->right = node->right;
+            if(node->right != nullptr)
+                node->right->left = node->left;
+            
+            delete node;
+            //free(node);
+        }else{
+            return -1;
+        }
+    }
+};
+
 
 #pragma endregion
 
 #pragma region 回溯算法的部分
-
 //回溯算法里面对于小火柴正方形的解法
 bool backtrack(std::vector<int> nums, int squareLen, int index, std::vector<int> square);
 bool makesquare(std::vector<int> &nums)
@@ -372,7 +494,6 @@ bool makesquare(std::vector<int> &nums)
 
 bool backtrack(std::vector<int> nums, int squareLen, int index, std::vector<int> square)
 {
-
     if (index == (nums.size()))
     {
         //开头检测是否成功了的案例
@@ -396,13 +517,10 @@ bool backtrack(std::vector<int> nums, int squareLen, int index, std::vector<int>
     }
     return false;
 }
-
 #pragma endregion
 
 #pragma region LeetCode
-
 ///单调栈解下一个更大元素的算法方式
-//
 std::vector<int> findBiggerElement(int num1[],const int *num2,const int len1, const size_t len2){
     
     std::stack<int> tempRelationStack;
@@ -433,8 +551,8 @@ std::vector<int> findBiggerElement(int num1[],const int *num2,const int len1, co
     return result;
 }
 
-///单调栈进阶类型，现在是循环数组
 
+///单调栈进阶类型，现在是循环数组
 std::vector<int> nextGreaterElements(std::vector<int>& nums) {
     //记录当前元素的位置
 
@@ -459,8 +577,6 @@ std::vector<int> nextGreaterElements(std::vector<int>& nums) {
 
     return result;
 }
-
-
 
 
 //普通的方式，和普通的题目
@@ -615,9 +731,6 @@ int maxSatisfied(std::vector<int>& customers, std::vector<int>& grumpy, int X) {
 
     return maxCount+satisfied;
 }
-
-
-
 #pragma endregion
 
 #pragma region 搜索二叉树的相关部分
@@ -738,11 +851,9 @@ void InorderTraversing(BSearchTreeNode<T> *Root){
         
     }
 }
-
 #pragma endregion
 
 #pragma region 平衡二叉树
-
 //为后面红黑树做铺垫，设计平衡二叉树的整体结构
 template <class T>
 class BlanceBTree
@@ -953,82 +1064,7 @@ public:
     }
     
 };
-
 #pragma endregion
-
-#pragma region 剑指offer 算法
-
-///KMP字符串匹配算法
-///基本方式：里面next的值是前缀集合和后缀集合的交集的最大长度。
-///把所有拆分更好看出来，一个开头算，一个结尾算，算的是模式字符串的长度
-///主字符串到当前卡主位置是和模式字符串相同的，那么这个最大匹配长度就可以直接移动自己的距离了
-///因为是倒着算的，所以没问题
-///next数组获取就是对自身重复匹配的过程，第一个值一定是-1，编程方便
-///一直向后移动，相同过的就开始匹配，不同的标零，相同的就开始置一，后面的相加。
-/// next数组需要全体的数向后移动一位，因为是数组中的位置
-int KMPStringMatch(const std::string desString, const std::string flag,const int flagLen){
-    std::vector<int> next(flagLen,0);
-    int i=0,j=0;
-    getNext(flag.c_str(),next);
-    
-    while(i<desString.length() && j<flag.length()){
-        if(j == -1 || desString[i] == flag[j]){
-            j++;i++;
-        }else{
-            j=next[j]; 
-        }
-    }
-    if(j == flag.length())
-        return i-j;
-    else
-    {
-        return -1;
-    }
-    
-    return ;
-}
-//
-void getNext(const char *str,std::vector<int> &next){
-    next[0] = -1;
-    int index=0, j=-1;
-    while( index < strlen(str)){
-        if(j == -1 || str[index] == str[j]){
-            index++;
-            j++;
-            next[index] = j;
-        }else   //初始化都是0
-        {
-            j = next[j];
-        }
-    }
-}
-
-///动态规划背包问题:一定大小的背包装进去最重的货物
-///货物的重要要保持最大,B(n,c) = Max[B(n-1,c),B(n-1,c-1)+W]
-///对于前 i 个物体，在背包容量为w的时候，可以装的最大价值是dp[i][w]。
-///所以针对每一个物体的时候都要评测背包的容量的大小。
-///效率较低，完成另一种效率更高的方式
-int dynamicBackpack(int maxWeight, std::vector<std::pair<int,int>> goods){
-    std::vector<std::vector<int>> 
-        tempt(goods.size()+1,std::vector<int>(goods.size()+1,0));
-    
-    for(int i=1;i<=goods.size();i++){
-        for(int w = 1;w<=maxWeight;w++){
-            if(w - goods[i-1].second<0)
-                tempt[i][w] = tempt[i-1][w];
-            else //足够存放，比较放空余空间大小的之后再放当前重量的，最大的价值
-                tempt[i][w] = std::max(tempt[i-1][w - goods[i-1].second]+
-                    goods[i].second,tempt[i-1][w]);
-        }
-    }
-    return tempt[maxWeight][goods.size()];
-}
-
-
-
-
-#pragma endregion
-
 
 
 

@@ -4,6 +4,11 @@
 #include<sys/types.h>
 #include<ws2tcpip.h>
 #include<fcntl.h>
+#include <unistd.h>
+#include<sys/types.h>
+#include<sys/stat.h>
+#include<fcntl.h>
+
 using namespace std;
 
 int conn_nonblock(int sockfd,const struct sockaddr_in *addr,socklen_t len,int nsec){

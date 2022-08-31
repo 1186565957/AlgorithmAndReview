@@ -1,8 +1,15 @@
+#ifndef _TOOLS_REPO_H_
+#define _TOOLS_REPO_H_
+
 #include<stdio.h>
 #include<ctype.h>
+#include<string.h>
 #include<assert.h>
+#include<stdlib.h>
+
+
 #include<random>
-using namespace std;
+
 
 //字节的拷贝函数
 //要考虑这之间的内存要是重叠了怎么办
@@ -30,13 +37,6 @@ void *memmove(void *dst,const void *src,size_t n){
     return dst;
 }
 
-///复制字符串到指定位置的方式
-char *strcpy(char *dst,const char *src,size_t n){
-
-    assert(dst&&src);
-    ///和上面是完全一样的东西的构成结构。
-}
-
 //实现字符向整形类型转换的程序
 int atoi(char *nptr){
     int Iterger_sin =1;
@@ -60,34 +60,15 @@ int atoi(char *nptr){
     return Result_Interger;
 }
 
-//实现快速排序的优化程序
-template<class T>
-T* fast_Sort(T *array,size_t begin,size_t end){
-    int randomNum =rand()%(end -begin+1);
-    size_t i=begin,j=end;
-    while(i!=j){
-        while(array[i]<=array[randomNum]){           
-            begin++;
-        }
-        while(array[j]>=array[randomNum]){
-            end--;
-        }                      
-        swap(array[j],array[i]);
-        j--,i++;        
-    } 
-    fast_Sort(array,begin,randomNum-1);
-    fast_Sort(array,randomNum+1,end);  
-}
-
-vector<string> Split(string &str,string flag){
-
-    vector<string> vec;
+//字符分割函数
+std::vector<std::string> Split(std::string &str,std::string flag){
+    std::vector<std::string> vec;
     size_t last=0;
     //返回的是第一个字符的下标
     size_t index = str.find(flag,last);
     //npos是-1，是结束也就是找不到了的时候
     //查找失败返回2^64-1
-    while(index != string::npos){
+    while(index != std::string::npos){
         if(index == last){
             last = index+flag.size();
             index = str.find(flag,last);
@@ -103,3 +84,51 @@ vector<string> Split(string &str,string flag){
     }
     return vec;
 }
+
+//sort and dedumplicate the element with linux c 
+int sort_dedup(uint32_t* iplist, int* ipcnt)
+{
+    #define MAX_IP_CNT 65535
+	if(*ipcnt <= 0 || iplist == NULL)
+		return -1;
+
+	//sort
+	int i, j, cnt = *ipcnt;
+	uint32_t key = 0;
+	for (j = 1; j <*ipcnt; j++)
+	{
+		i = j - 1;
+		key = iplist[j];
+		while (i >= 0 && iplist[i] > key)
+		{
+			iplist[i + 1] = iplist[i];
+			i--;
+		}
+		iplist[i + 1] = key;
+	}
+
+	//deduplicate
+	i = 0, j = 1;
+	while(j < cnt)
+	{
+		if(iplist[j] == iplist[i])
+		{
+			j++;
+			(*ipcnt)--;
+		}
+		else
+		{
+			iplist[++i] = iplist[j];
+			j++;
+		}
+	}
+
+	bzero(&iplist[++i], (MAX_IP_CNT-j+1)* sizeof(uint32_t));
+	return 0;
+}
+
+//Resolving the problem of buffer/cache increasing instantly
+// due to callback fwriet() frequently
+
+
+#endif // !_TOOLS_REPO_H_
