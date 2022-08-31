@@ -1,9 +1,7 @@
 #include "BRTree.h"
 
-
 template<class T>
 void RBTree<T>::InsertNode(T data) {
-
 	RBNode<T>* newNode =  CreateNode(data);
 	RBNode<T>* currentNode = Root;
 	while (currentNode != nullptr) {
@@ -37,29 +35,29 @@ int  RBTree<T>::DeleteNode(RBNode<T>* Node) {
 
 	RBNode<T>* currentNode = Node;
 	RBNode<T>* temptNode = currentNode;
-	//ÕÒÒ»¸öµ¥×ÓÊ÷»òÕßÒ¶×ÓÀ´½ÓÌæ
-	if (currentNode->color == Red) {//ºìÏÂ±ØºÚ
+	//æ‰¾ä¸€ä¸ªå•å­æ ‘æˆ–è€…å¶å­æ¥æŽ¥æ›¿
+	if (currentNode->color == Red) {//çº¢ä¸‹å¿…é»‘
 		if (currentNode->leftNode == nullptr) {
-			//ÎÞ×ÓÊ÷
+			//æ— å­æ ‘
 			if (currentNode->rightNode == nullptr) {
 				free(currentNode);
 				return 0;
 			}
-			//ÓÐÓÒ×ÓÊ÷
+			//æœ‰å³å­æ ‘
 			//temptNode = currentNode;
 			currentNode = currentNode->rightNode;
 			free(temptNode)
 			return 0;
 		}
 		else {
-			//ÓÐ×ó×ÓÊ÷
+			//æœ‰å·¦å­æ ‘
 			if (currentNode->rightNode == nullptr) {
 				//temptNode = currentNode;
 				currentNode = currentNode->leftNode;
 				free(temptNode)
 				return 0;
 			}
-			//Á½¸ö×ÓÊ÷¶¼ÓÐ
+			//ä¸¤ä¸ªå­æ ‘éƒ½æœ‰
 			/*temptNode = currentNode;
 			while (temptNode->leftNode != nullptr) {
 
@@ -77,8 +75,8 @@ int  RBTree<T>::DeleteNode(RBNode<T>* Node) {
 			}*/
 		}
 	}
-	//ÄÚ²¿°üº¬ºìÉ«Ë«×ÓÊ÷ºÍºÚÉ«½ÚµãµÄÇé¿ö
-	//ÕâÖÖÖ»ÄÜÊÇÒ¶×Ó½Úµã
+	//å†…éƒ¨åŒ…å«çº¢è‰²åŒå­æ ‘å’Œé»‘è‰²èŠ‚ç‚¹çš„æƒ…å†µ
+	//è¿™ç§åªèƒ½æ˜¯å¶å­èŠ‚ç‚¹
 	while (temptNode->leftNode != nullptr || temptNode != nullptr) {
 		if (temptNode->leftNode != nullptr)
 			temptNode = temptNode->leftNode;

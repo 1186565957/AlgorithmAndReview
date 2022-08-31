@@ -1,9 +1,9 @@
 /*
-*	1.������������ת���Σ�ɾ���������
-*	2.��������ƽ����ȥ��ȡ���ٵ���ת����
-*	3.����ֱ�������ĸ��ڵ��Ǻ�ɫ��ʱ�򣬻���������Ϊ�˸��ڵ�ֹͣ
-*	4.ɾ����ʱ��ֱ�������Ǹ��ڵ㣬����������Ϊ��ɫ�ڵ�֮��ɾ����������
-*	5.����ʱ�����ձʼǽ�����ת�����е���ת���Ǵ���ײ��Ҷ�ڵ㿪ʼ�ġ�
+*	1.红黑树插入最多转两次，删除最多三次
+*	2.用自身的平衡性去换取更少的旋转性质
+*	3.插入直到自身的父节点是黑色的时候，或者自身成为了根节点停止
+*	4.删除的时候，直到自身是根节点，或者自身成为红色节点之后，删除自身即可
+*	5.其他时候依照笔记进行旋转，所有的旋转都是从最底层的叶节点开始的。
 *	@ym
 **/
 #pragma once
@@ -48,8 +48,8 @@ public:
 private:
 	RBNode* Root;
 private:
-	//������������Ե�ǰ�ڵ�����������ƶ�������
-	//����ͬ��
+	//定义的左旋是以当前节点进行向左下移动的左旋
+	//右旋同理
 
 	RBNode* CreateNode(T tdata) {
 		RBNode<T>* newNode = (RBNode*)malloc(sizeof(RBNode));
@@ -150,23 +150,23 @@ private:
 
 		}
 	}
-	//��Բ���ڵ�ʱ�����������
+	//针对插入节点时候的修正问题
 	RBNode* InsertFixedUp(RBNode* Node) {
 		if (Node == Root)
 			return nullptr;
 		if (Node->parentNode->color == Black)
 			return;
-		//���ڵ��ɫ������ڵ��ɫ
+		//父节点红色，叔叔节点红色
 		if (Node->parentNode->color == Red && Node->parentNode->broNode->color == Red) {
 			Node->parentNode->color = Black;
 			Node->parentNode->broNode->color = Black;
 			return InsertFixedUp(Node->parentNode->parentNode);
-		}//���ڵ��ɫ�������ɫ����ǰ�ҽڵ�
+		}//父节点红色，叔叔黑色，当前右节点
 		else if(Node->parentNode->rightNode == Node && Node->parentNode->color == Red
 			&& Node->parentNode->broNode->color == Black) {
 			leftRotate(Node->parentNode);
 			return InsertFixedUp(Node);
-		}//���ڵ��ɫ�������ɫ����ǰ��ڵ�
+		}//父节点红色，叔叔黑色，当前左节点
 		else if (Node->parentNode->leftNode == Node && Node->parentNode->color == Red
 			&& Node->parentNode->broNode->color == Black) {
 			Node->parentNode->color = Black;
@@ -174,32 +174,32 @@ private:
 			return InsertFixedUp(Node->parentNode);
 		}
 	}
-	//���ɾ���ڵ��ʱ��Ľڵ���������
+	//针对删除节点的时候的节点修正问题
 	RBNode* DeleteFixedUp(RBNode* Node) {
 		if (Node == Root)
 			return nullptr;
 		if (Node->color == Red)
 			return Node;
-		//˫�ڣ��ֵ�Ϊ��ɫ
+		//双黑，兄弟为红色
 		if ( Node->color == Black) {
 			Node->broNode->color = Black;
 			Node->parentNode->color = Red;
 			leftRotate(Node->parentNode);
 			return DeleteFixedUp(Node->broNode);
 		}
-		else if ( Node->broNode->color == Black &&	//˫�ڣ��ֵ�Ϊ�ڣ�ֶ�Ӷ��Ǻ�
+		else if ( Node->broNode->color == Black &&	//双黑，兄弟为黑，侄子都是黑
 			Node->broNode->leftNode->color == Black && Node->broNode->rightNode->color == Black) {
 			Node->broNode->color = Red;
 			return DeleteFixedUp(Node->parentNode);
 		}
-		else if ( Node->broNode->color == Black		//˫�ڣ��ֵ�Ϊ�ڣ���ֶ�Ӻ�ɫ����ֶ�Ӻ�ɫ
+		else if ( Node->broNode->color == Black		//双黑，兄弟为黑，左侄子红色，右侄子黑色
 			&& Node->broNode->leftNode->color == Red && Node->broNode->rightNode->color == Black) {
 			Node->broNode->color = Red;
 			Node->broNode->leftNode->color = Black;
 			rightRotate(Node->parentNode, Node->parentNode);
 			return DeleteFixedUp(Node->broNode);
 		}
-		else if (Node->broNode->color == Black		//˫�ڣ��ֵ�Ϊ�ڣ���ֶ�����⣬��ֶ�Ӻ�ɫ
+		else if (Node->broNode->color == Black		//双黑，兄弟为黑，左侄子任意，右侄子红色
 			&& Node->broNode->rightNode->color == Red) {
 			Node->broNode->color = Node->parentNode->color;
 			Node->parentNode->color = Black;
