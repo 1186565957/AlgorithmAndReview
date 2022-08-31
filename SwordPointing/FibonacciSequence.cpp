@@ -1,7 +1,4 @@
-#include<stdlib.h>
-#include<stdio.h>
-#include<memory.h>
-#include<string.h>
+#include "common_c_plus.h"
 
 #pragma region 斐波那契类型
 //斐波那契数列是从1开始，下一个的值是前两个值的和
@@ -46,43 +43,6 @@ int FrogSteps(int n){
 //f(n) = 2^(n-1)    
 
 #pragma endregion
-
-#pragma region 排序类型
-
-//旋转数组的最小数字
-//有一个是否有重复的问题
-int RotatoMinDigit(int *RArray,int len){
-
-    if(RArray == nullptr || len <=0)
-        return -1;
-    int *begin = RArray;
-    int *end = RArray+len-1;
-    int *ptr = nullptr;
-
-    int tempLen = len/2;
-    ptr = RArray + tempLen;
-    while (ptr!=begin && ptr != end)
-    {
-        if (*ptr >= *end)
-        {
-            tempLen += (end - ptr) / 2;
-            begin = ptr;
-            ptr = RArray + tempLen;
-        }
-        else
-        {
-            tempLen -= (ptr - begin) / 2;
-            end = ptr;
-            ptr = RArray + tempLen;
-        }
-
-    }
-    return *ptr;
-}
-
-
-#pragma endregion
-
 
 int main(){
 
