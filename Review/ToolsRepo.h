@@ -591,4 +591,181 @@ namespace circle_buffer
 	}
 }
 
+/**
+ * @brief udp keep-alive funtiong
+ * 
+ */
+//Init the keep-alive server
+#include <net/if.h>
+#include <sys/ioctl.h>
+
+void init_server()
+{
+	int aliveoff = 1;
+	int udpservfd = socket(AF_INET, SOCK_DGRAM, 0);
+	struct sockaddr_in serv_addr;
+	struct ifreq ifr;
+	memset(&ifr, 0, sizeof(struct ifreq));
+
+	//get the local ip-address
+	{
+		uint32_t name_len = strlen(config->netflow_ethname);
+		memcpy(ifr.ifr_name, config->netflow_ethname, name_len);
+		ifr.ifr_name[name_len] = '\0';
+		int ret = 0;
+		if ((ret = ioctl(ntfl->udpservfd, SIOCGIFADDR, &ifr)) < 0)
+		{
+			return -1;
+		}
+	}
+	memcpy(&serv_addr, &ifr.ifr_addr, sizeof(serv_addr));
+	serv_addr.sin_family = AF_INET;
+	serv_addr.sin_port = htons(config->netflow_liveport);
+	bind(ntfl->udpservfd, (struct sockaddr *)&serv_addr, (socklen_t)sizeof(struct sockaddr));
+}
+
+//implement with the select
+void server_task()
+{
+	fd_set *fds = &ntfl->fds;
+	FD_ZERO(fds);
+	FD_SET(ntfl->udpservfd, fds);
+
+	timeout.tv_sec = 1;
+	timeout.tv_usec = 0;
+
+	if ((ret = select(ntfl->udpservfd + 1, &ntfl->fds, NULL, NULL, &timeout)) > 0)
+	{
+		while ((ret = recvfrom(ntfl->udpservfd, recv_buf, 64, 0, (struct sockaddr *)&addr, (socklen_t *)&addr_len)) > 0)
+		{
+			uint32_t magic_code = 0;
+			uint16_t opt_code = 0;
+			uint16_t opt_id = 0;
+			uint16_t status_code = 0;
+
+			uint8_t *pt = recv_buf;
+			magic_code = *((uint32_t *)pt);
+			if (magic_code != KEEP_ALIVE_TYPE)
+				return;
+			pt += sizeof(uint32_t);
+			opt_code = *((uint16_t *)pt);
+			if (opt_code != 0)
+				return;
+			pt += sizeof(uint16_t);
+			opt_id = *((uint16_t *)pt);
+
+			status_code = find_usockj(&addr);
+
+			//Splice udp-packet
+			int msg_len = sizeof(uint32_t) + sizeof(uint16_t) * 3;
+			uint8_t *ptr = send_buf;
+			*((uint32_t *)ptr) = magic_code;
+			ptr += sizeof(uint32_t);
+			*((uint16_t *)ptr) = 1;
+			ptr += sizeof(uint16_t);
+			*((uint16_t *)ptr) = opt_id;
+			//the sock status, 0 is right, 1 is error
+			ptr += sizeof(uint16_t);
+			*((uint16_t *)ptr) = status_code;
+
+			ret = sendto(ntfl->udpservfd, send_buf, msg_len, 0, (struct sockaddr *)&addr, (socklen_t)sizeof(addr));
+			if (ret < 0)
+			{
+				printf("%s, %d, keep-alive send response pkt error", __FILE__, __LINE__);
+				return;
+			}
+		}
+	}
+}
+
+//implement with epoll
+
+// the udp-client
+char* get_localtime(time_t now)
+{
+	struct tm time;
+	localtime_r(&now, &time);
+
+	bzero(buffer, 64/*buf_size*/);
+	sprintf(buffer, "%4.4d/%2.2d/%2.2d/%2.2d:%2.2d:%2.2d", time.tm_year+1900, time.tm_mon+1, 
+			time.tm_mday, time.tm_hour, time.tm_min, time.tm_sec);
+
+	return (char*)buffer;
+}
+
+int main_test(int argc, char **argv)
+{
+    if (argc < 3)
+    {
+        fprintf(stderr, "Usage: ./udpserver 127.0.0.1 7777\n");
+        exit(1);
+    }
+
+    uint8_t *ip = argv[1];
+    uint16_t port = atoi(argv[2]);
+
+    int udp_socket = socket(AF_INET, SOCK_DGRAM, 0);
+    if (udp_socket < 0)
+    {
+        return -1;
+    }
+
+    int save_mode = fcntl(udp_socket, F_GETFL, 0);
+    fcntl(udp_socket, F_SETFL, save_mode | O_NONBLOCK);
+
+    uint8_t recv_buf[64];
+    uint8_t send_buf[64];
+    int daddrlen = sizeof(struct sockaddr_in);
+    struct sockaddr_in saddr, daddr;
+    saddr.sin_family = AF_INET;
+    saddr.sin_port = htons(port);
+    inet_pton(AF_INET, ip, &saddr.sin_addr);
+
+    int ret = 0;
+    int i = 0;
+    while (1)
+    {
+        //Splice udp-packet
+        int msg_len = sizeof(uint32_t) + sizeof(uint16_t) * 3;
+        uint8_t *ptr = send_buf;
+        *((uint32_t *)ptr) = KEEP_ALIVE_TYPE;
+        ptr += sizeof(uint32_t);
+        *((uint16_t *)ptr) = 0;
+        ptr += sizeof(uint16_t);
+        *((uint16_t *)ptr) = i++;
+
+        ret = sendto(udp_socket, send_buf, msg_len, 0, (struct sockaddr *)&saddr, (socklen_t)sizeof(saddr));
+        if (ret < 0)
+        {
+            printf("%s, %d,netflow.so: keep-alive send response pkt error", __FILE__, __LINE__);
+            //return;
+        }
+
+        int addr_len = 0;
+        ret = recvfrom(udp_socket, recv_buf, 64, 0, (struct sockaddr *)&daddr, (socklen_t *)&addr_len);
+        if (ret > 0)
+        {
+            uint8_t* pt = recv_buf;
+            uint32_t magic_code = *((uint32_t *)pt);
+            if (magic_code != KEEP_ALIVE_TYPE)
+                return;
+            pt += sizeof(uint32_t);
+            uint16_t opt_code = *((uint16_t *)pt);
+            if (opt_code != 1)
+                return;
+            pt += sizeof(uint16_t);
+            uint16_t opt_id = *((uint16_t *)pt);
+            pt += sizeof(uint16_t);
+            uint16_t status_code = *((uint16_t *)pt);
+
+            time_t now = time(NULL);
+            printf("%s: opt_code: %d, opt_id: %d, opt_status: %d\n", get_localtime(now), opt_code, opt_id, status_code);
+        }
+
+        sleep(10);
+    }
+}
+
+
+
 #endif // !_TOOLS_REPO_H_
