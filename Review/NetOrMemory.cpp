@@ -61,3 +61,121 @@ int conn_nonblock(int sockfd,const struct sockaddr_in *addr,socklen_t len,int ns
         }
     }
 }
+
+
+
+namespace tcp_client{
+#define SEND_SIZE 3072
+
+#define TF_CTL_NONE			0
+#define TF_CTL_RUNNING		1
+#define TF_CTL_PASUE		2
+
+struct tcp_ctl_config
+{
+	uint32_t ip;
+	uint16_t port;
+	uint32_t timeout;
+};
+
+struct tcp_ctl
+{
+	struct tcp_ctl_config config;
+
+	int sockfd;
+
+	int last_time;
+
+	int status;
+};
+
+int tcpclient_init(void* tcp_hdr)
+{
+	struct tcp_ctl* hdr = (struct tcp_ctl*)tcp_hdr;
+
+	uint32_t ip = hdr->config.ip;
+	uint16_t port = hdr->config.port;
+	int sock = socket(AF_INET, SOCK_STREAM, 0);			
+	if ( sock< 0 )
+	{
+		printf("HeartDetected create client socket error");
+		return -1;
+	}
+
+	struct sockaddr_in server_addr;
+	memset(&server_addr, 0, sizeof(struct sockaddr_in));
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_addr.s_addr = ip;
+	server_addr.sin_port = htons(port);
+
+	//set the socket options
+	int timeout = hdr->config.timeout;
+	setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(int));
+	
+	setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(int));
+
+	bool reuseaddr = true;
+	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &reuseaddr, sizeof(bool));
+
+	int keepalive = 1;
+	setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, &keepalive, sizeof(int));
+	
+	int ret;
+	ret = connect(sock, (struct sockaddr*)&server_addr, sizeof(struct sockaddr));
+	if(ret == 0)
+	{
+		hdr->sockfd = sock;
+		return 0;
+	}
+
+	return ret;
+}
+
+int tcpclient_send_log(void* tcp_hdr, uint8_t* data, uint32_t len)
+{
+	struct tcp_ctl* hdr = (struct tcp_ctl*)tcp_hdr;
+
+	//Doing compress is after splited the message-log
+
+	int ret = 0;
+	int have_remain_len = len;
+	uint8_t* buf = data;
+
+	if(hdr->status == TF_CTL_PASUE)
+	{
+		if(tcpclient_init(tcp_hdr))
+			return -1;
+	}
+
+	while(have_remain_len > 0)
+	{
+		ret = send(hdr->sockfd, buf, have_remain_len < SEND_SIZE? have_remain_len: SEND_SIZE, 0);
+		if(ret > 0)
+		{
+			have_remain_len -= ret;
+			buf += ret;
+		}
+		else
+		{
+			return -1;
+		}
+	}
+	return 0;
+}
+
+int tcpclient_timeout(void* tcp_hdr)
+{
+	struct tcp_ctl* hdr = (struct tcp_ctl*)tcp_hdr;
+	
+	if(hdr->sockfd > 0)
+		close(hdr->sockfd);
+}
+
+int tcpclient_close(void* tcp_hdr)
+{
+	struct tcp_ctl* hdr = (struct tcp_ctl*)tcp_hdr;
+	
+	if(hdr->sockfd > 0)
+		close(hdr->sockfd);
+}
+}
