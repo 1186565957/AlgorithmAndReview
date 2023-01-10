@@ -3,8 +3,11 @@
 #include <stdint.h>
 
 /***
- * Crc32原理：
- *  
+ * Crc32原理：本质上利用的是二进制的模二除法(二进制数据左移N位，除以多项式，余数就是校验码)
+ *  模二运算还可以转化为 该块^进入该块中的各个数据 可以得到该块数据的求余数
+ *  进入块中的除数数据是按照上一个块决定的，所以某块的余数 = 该块^上一块查表输出
+ *  只需要将各块进入的除数数据建表就可以直接查了
+ * 
 */
 
 static const uint32_t crc32tab[] = {
@@ -76,10 +79,15 @@ static const uint32_t crc32tab[] = {
 
 
 /*
-*   0xEDB88320 is regulated by IEEE association to generate the crc32_table  
+*   0xEDB88320 is regulated by IEEE association to generate the crc32_table (reverse)
 *   (x32 + x26 + x23 + x22 + x16 + x12 + x11 + x10 + x8 + x7 + x5 + x4 + x2 + x+ 1)
+*   (11101101101110001000001100100000)B → 00000100110000010001110110110111
 *   
-*   
+*    For the purpose of saving resource, using 2^8 table. Each node storages the crc32 check
+*    node of an8-bit unit of data
+*
+*   Gainning the values of all an8-bit unit of data and storages in crc32_table.
+*   Don't be confused by the uint32_t 
 */
 void gen_crc32_table(uint32_t *crc32_table)
 {
@@ -105,6 +113,7 @@ void gen_crc32_table(uint32_t *crc32_table)
 	}
 }
 
+//Calculation formula: crc_new = Crc32Table[(crc ^ data[i]) & 0xff] ^ (crc >> 8)
 uint32_t crc32( const unsigned char *buf, uint32_t size)
 {
      uint32_t i, crc;
