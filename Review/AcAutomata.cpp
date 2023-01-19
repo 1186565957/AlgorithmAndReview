@@ -22,7 +22,7 @@ namespace ACMatch
 		int dp[flag_len] = {-1, 0};
 		while (i < flag_len)
 		{
-			if (string[i - 1] == string[com_idx])
+			if (string[i - 1] == string[comp_idx])
 
 				dp[i++] = ++comp_idx;
 			else
@@ -53,7 +53,7 @@ namespace ACMatch
 		}
 
 		//Determine whether the iii has moved to end of the fla-str
-		idx = (iii == flag ? ii - iii : -1);
+		idx = (iii == flag_len ? ii - iii : -1);
 		return idx;
 	}
 

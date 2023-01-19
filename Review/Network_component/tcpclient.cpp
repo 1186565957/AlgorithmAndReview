@@ -1,16 +1,7 @@
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <string.h>
-#include <netinet/in.h>
-#include <fcntl.h>
-#include <errno.h>
+#include "common.h"
 
-namespace tcp_client{
+namespace tcpclient{
 #define SEND_SIZE 3072
 
 #define TF_CTL_NONE			0
