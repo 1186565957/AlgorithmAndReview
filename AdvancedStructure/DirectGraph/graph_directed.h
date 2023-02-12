@@ -25,6 +25,7 @@ struct graph_Edge
 	graph_Edge(int _adjVex,graph_Edge *_nextArc=nullptr):
 		mAdjIndex(_adjVex),pNextEdge(_nextArc),mWeight(0){}
 };
+
 template<typename DataType>
 struct graph_Vertex   
 {

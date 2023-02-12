@@ -51,8 +51,6 @@ public:
             close(data_sockfd);
     }
 
-//这种没办法正常打印流程了
-
 public:
     int FTPClient_init(char *errbuf, uint32_t errlen)
     {

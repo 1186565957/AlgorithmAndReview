@@ -286,8 +286,6 @@ namespace StringMatch
 
 				idx = ac_find_goto(idx, letter);
 			}
-
-
 		}
 	};
 };

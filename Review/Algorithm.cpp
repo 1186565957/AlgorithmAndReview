@@ -224,7 +224,6 @@ std::vector<T> InsertionSearch(T *array,size_t low,size_t high,size_t flag){
 ///哈希插入函数，链表法的时候里面存的就是一个
 //链表的形势
 enum FlagTyte{
-    
     FLAG_EMPTY,
     FLAG_LIST,
 };

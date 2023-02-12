@@ -54,7 +54,6 @@ namespace common
         }
 
         
-
         ~logrecord()
         {
             fclose(this->fd);
