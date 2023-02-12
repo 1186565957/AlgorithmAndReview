@@ -5,20 +5,19 @@
 #include<stdio.h>
 #include <stdlib.h>
 
-
-Status InitBTree(BTree *t){
+int InitBTree(BTree *t){
    t=NULL;
-   return OK;
+   return 0;
 }
 
-int SearchBTNode(BTNode *p,KeyType k){
+int SearchBTNode(BTNode *p,int k){
    int i=0;
    //looking out the semicolon at the end.  
    for (i=0;i<p->keynum && p->key[i+1]<=k;i++);
    return i;
 }
 
-Result SearchBTree(BTree t,KeyType k){
+Result SearchBTree(BTree t,int k){
    BTNode *p=t, *q=NULL;
    int found_tag =0;
    int i=0;
@@ -47,7 +46,7 @@ Result SearchBTree(BTree t,KeyType k){
    return result;
 }
 //insert key and q into the tree  
-void InsertBTNode(BTNode **p,int i,KeyType k,BTNode *q){
+void InsertBTNode(BTNode *p,int i,int k,BTNode *q){
    int j;
    for (j=p->keynum;j>1;j--) {
       p->key[j+1]=p->key[j];
@@ -62,7 +61,7 @@ void InsertBTNode(BTNode **p,int i,KeyType k,BTNode *q){
 }
 //split the p into two parts from middle of the node,
 // and the laster combine with node q
-void SplitBTNode(BTNode* *p,BTNode *q){
+void SplitBTNode(BTNode* p,BTNode *q){
    int i;
    //m is the Maxdegree
    int s=(m+1)/2;
@@ -85,7 +84,7 @@ void SplitBTNode(BTNode* *p,BTNode *q){
    p->keynum=s-1;
 }
 
-void NewRoot(BTNode **t,KyType k,BTNode *p,BTNode *q){
+void NewRoot(BTNode *t, int k,BTNode *p,BTNode *q){
    t=(BTNode *)malloc(sizeof(BTNode));
    t->keynum=1;
    t->ptr[0]=p;
@@ -98,13 +97,13 @@ void NewRoot(BTNode **t,KyType k,BTNode *p,BTNode *q){
    if (q!=NULL) {
       q->parent = t;
    }
-   root->parent =NULL:
+   t->parent =NULL;
 }
 
-void InsertBTree(BTree *t,int i, KeyType k, BTNode *p,){
+void InsertBTree(BTree *t,int i, int k, BTNode *p){
    BTNode* q;
    int finish_tag,newroot_tag,s;
-   KeyType x;
+   int x;
    //insert into node p, if it is empty
    //create a new tree 
    if (p==NULL) {
@@ -114,7 +113,7 @@ void InsertBTree(BTree *t,int i, KeyType k, BTNode *p,){
       q=NULL;
       finish_tag=0;
       newroot_tag=0;
-      while (finish_tag==0**newroot_tag==0) {
+      while (finish_tag==0 && newroot_tag==0) {
          InsertBTNode(p,i,x,q);
          if (p->keynum<=max) {
             finish_tag=1;
@@ -152,7 +151,7 @@ void Remove(BTNode* p,int i){
 // of parentNode
 void MoveRight(BTNode* p,int i){
    int j;
-   BTNode* q=p->prt[i];
+   BTNode* q=p->ptr[i];
    BTNode* aq=p->ptr[i-1];
 
    for (j=q->keynum;j>0;j--) {
@@ -190,7 +189,7 @@ void MoveLeft(BTNode *p,int i){
    q->ptr[0]=q->ptr[0];
    q->keynum--;
 
-   for (j=1;j<=aq.keynum;j++) {
+   for (j=1;j<=aq->keynum;j++) {
       q->key[j]=q->key[j+1];
       aq->ptr[j]=aq->ptr[j+1];
    }
@@ -204,15 +203,15 @@ void Combine(BTNode *p,int i){
    BTNode *aq=p->ptr[i-1];
 
    aq=p->keynum++;
-   aq->key[ap->keynum]=q->key[i];
-   aq->ptr[ap->keynum]=q->ptr[0];
+   aq->key[aq->keynum]=q->key[i];
+   aq->ptr[aq->keynum]=q->ptr[0];
    //add all rigthNode to the aq's right side;
    for (j=1;j<p->keynum;j++) {
-      ap->keynum++;
+      aq->keynum++;
       aq->key[aq->keynum]=q->key[j];
       aq->ptr[aq->keynum]=q->ptr[j];
    }
-   for (j=i;j<p->num;j++) {
+   for (j=i;j<p->keynum;j++) {
       p->key[j]=p->key[j+1];
       p->ptr[j]=p->ptr[j+1];
    }
@@ -237,18 +236,18 @@ void AjustBtree(BTNode *p,int i){
    }else if(p->ptr[i-1]->keynum>min){
       MoveRight(p,i);
    }else if(p->ptr[i+1]->keynum>min){
-      MoveLeft(p,i+1)?
+      MoveLeft(p,i+1);
    }else
       Combine(p,i);
 }
 
-int FindBTNode(BTNode* p,KeyType k,int *i){
+int FindBTNode(BTNode* p,int k, int i){
    if (k<p->key[1]) {
       i=0;
       return 0;
    }else{
       i=p->keynum;
-      while (k<p->key[i**i>1]) {
+      while (k<p->key[i*i>1]) {
          i--;
       }
       if (k==p->key[i]) {
@@ -257,7 +256,7 @@ int FindBTNode(BTNode* p,KeyType k,int *i){
    }
 }
 
-int BTNodeDelete(BTNode* p,KeyType k){
+int BTNodeDelete(BTNode* p,int k){
    int i;
    int found_tag;
    if (p==NULL) {
@@ -285,12 +284,12 @@ int BTNodeDelete(BTNode* p,KeyType k){
       return found_tag;
    }
 };
-void BTreeDelete(BTree *t,KeyType k){
+void BTreeDelete(BTree t,int k){
    BTNode *p;
    int a =BTNodeDelete(t,k);
    if (a==0) {
       printf("the key %d doesn't appear in the BTree\n",k);
-   }else if(t->keysum==0){
+   }else if(t->keynum ==0){
       p=t;
       t=t->ptr[0];
       free(p);
@@ -308,10 +307,10 @@ void DestoryBTree(BTree *t){
    t=NULL;
 }
 
-Status InitQueue(LinkList *L){
+int InitQueue(LinkList L){
    L=(LNode*)malloc(sizeof(LNode));               
     if(L==NULL)                                                 
-        return OVERFLOW;
+        return -1;
      L->next=NULL;
-     return OK;
+     return 0;
 }

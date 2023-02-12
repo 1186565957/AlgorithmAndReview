@@ -77,17 +77,17 @@ static Position FindSiblingKeyNum_M_2(Position parent,int i,int *j){
    Position Sibling=NULL;
    limit=LIMIT_M_2;
    if (i==0) {
-      if (parent->Children[1]>KeyNum>limit) {
-         Sibling=parentt->Children[1];
+      if (parent->Children[1]->KeyNum > limit) {
+         Sibling=parent->Children[1];
          *j=1;
       }
    }else{
       //i+1 and i-1 means the two side of the iNode
       if (parent->Children[i-1]->KeyNum>limit) {
-         Sibiling=parent->Children[i-1];
+         Sibling=parent->Children[i-1];
          *j=i-1;
       }else if(i+1<parent->KeyNum && parent->Children[i+1]->KeyNum>limit){
-         Sibiling=parent->Children[i+1];
+         Sibling=parent->Children[i+1];
          *j=i+1;
       }
    }
@@ -103,7 +103,7 @@ static Position InsertElement(int isKey, Position parent, Position X, KeyType k,
    if (isKey) {
       knum=X->KeyNum - 1;
       while (knum>=j) {
-         X->key[knum+1]=X->key[kmum];
+         X->key[knum+1]=X->key[knum];
          knum--;
       }
    }else{
@@ -133,7 +133,7 @@ static Position RemoveElement(int isKey, Position parent, Position X, int i, int
       limit=X->KeyNum;
       knum=j+1;
       while (knum<limit) {
-         X->key[knum-1]=X->key[kmum];
+         X->key[knum-1]=X->key[knum];
          knum++;
       }
       X->key[X->KeyNum-1]=Unavailable;
@@ -141,17 +141,17 @@ static Position RemoveElement(int isKey, Position parent, Position X, int i, int
       X->KeyNum--;
    }else{
       //remove the node of iLeaveNode,and combine the rest;
-      if (X->children[0]==NULL&&i>0) {
-         parent->Children[i-1]->Next=parent->Children[i+1]
+      if (X->Children[0]==NULL&&i>0) {
+         parent->Children[i-1]->Next=parent->Children[i+1];
       }
       limit = parent->KeyNum;
       knum=i+1;
       while (knum<limit) {
          parent->Children[knum-1]=parent->Children[knum];
          parent->key[knum-1]=parent->key[knum];
-         knum++
+         knum++;
       }
-      parent->Chilidren[parent->KeyNum-1]=NULL;
+      parent->Children[parent->KeyNum-1]=NULL;
       parent->key[parent->KeyNum-1]=Unavailable;
       parent->KeyNum--;
    }
@@ -171,7 +171,7 @@ static Position MoveElement(Position src, Position dst, Position parent,int i, i
    if (srcInfront) {
       if (src->Children[0]!=NULL) {
          while (j<n) {
-            child=src->Children[src->KeySum-1];
+            child=src->Children[src->KeyNum -1];
             //remove sec'child node and insert empty childNode into dstNode
             RemoveElement(0,src,child,src->KeyNum,Unavailable);
             InsertElement(0,dst,child,Unavailable,0,Unavailable);
@@ -179,7 +179,7 @@ static Position MoveElement(Position src, Position dst, Position parent,int i, i
          }
       }else{
          while (j<n) {
-            TmpKey = src->key[src->KeyNum-1];
+            tempkey = src->key[src->KeyNum-1];
             RemoveElement(1,parent,src,i,src->KeyNum-1);
             InsertElement(1,parent,dst,tempkey,+1,0);
             j++;
