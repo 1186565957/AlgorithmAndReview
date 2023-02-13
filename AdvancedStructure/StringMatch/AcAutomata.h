@@ -10,58 +10,7 @@
 
 namespace StringMatch
 {
-	/**
-	 * The KMP character-matching algorithm. Effective: O(n)
-	 * The essence is the transfer of state-machine
-	 * Key-point: keeping the dp-array which is only releated with the flag-str
-	 * DP-ARRAY: Value in array is meaning the maximum Length of the substring,
-	 * which matched by the reverser order
-	 * The next dp-value is depending on the previous value, because the new char is only compared
-	 * with the next charactor
-	 * 
-	 * @return The first starting position of flag-str in string
-	*/
-	int KMP_strmatch(char *string, uint32_t str_len, char *flag, uint32_t flag_len)
-	{
-		//All values in dp-array mimnus one. Then the val is according to the compare-idx
-		int i = 2, comp_idx = 0;
-		int dp[flag_len] = {-1, 0};
-		while (i < flag_len)
-		{
-			if (string[i - 1] == string[comp_idx])
-
-				dp[i++] = ++comp_idx;
-			else
-			{
-				if (comp_idx > 0)
-					comp_idx = dp[comp_idx];
-				else
-					comp_idx = 0;
-			}
-		}
-
-		//Doing the match progress while the idx is coninclude with the str-end
-		int ii, iii, idx;
-		while (ii < str_len && iii < flag_len)
-		{
-			if (string[ii] == flag[iii])
-			{
-				ii++;
-				iii++;
-			}
-			else
-			{
-				if (dp[iii] == -1)
-					ii++;
-				else
-					iii = dp[iii];
-			}
-		}
-
-		//Determine whether the iii has moved to end of the fla-str
-		idx = (iii == flag_len ? ii - iii : -1);
-		return idx;
-	}
+	
 	/**Same as the KMP-match, By recursivly caculatint the flag-string to 
 	 * gain the redirect-table, output-table
 	 * 
@@ -288,4 +237,126 @@ namespace StringMatch
 			}
 		}
 	};
+
+
+	/**
+	 * Integrating AC and BW algorithms: O(m/n)
+	 * 	Matching the string form right to left, if the last charactor isn' t match, stop;
+	 * Dismatch: Moving back (bad_idx - last_appear_idx) steps, if no appear-idx the value is -1; Bad-char is in the txt
+	 * Different from the last-commend, Whether good-suffix exits. Supporting the mutiple-charater
+	 * 
+	 * Basic-principle: 
+	*/
+
+	///BM-algorithm: 
+
+	class BMMatch
+	{
+	private: 
+		//the max pattern-len support
+		uint32_t maxSize;
+		const uint32_t asci_len = 256;
+
+		//key is len, value is start_idx
+		uint32_t *suffix;
+		//bool *isMatch;
+
+		//key is asci, value is idx
+		uint32_t *badCharactor;
+
+		typedef enum {
+			malloc_err=-3,
+			init_err,
+			match_err,
+			do_err,
+			success =0
+		}Status;
+
+	public: 
+		BMMatch(int MaxPatternLen)
+		{
+			maxSize = MaxPatternLen > asci_len? MaxPatternLen: asci_len;
+			
+			suffix = (uint32_t *)malloc(maxSize * sizeof(uint32_t));
+			if(suffix == nullptr)
+				throw malloc_err;
+			memset(suffix, -1, maxSize);
+
+			// isMatch = (bool *)malloc(maxSize * sizeof(bool));
+			// if(isMatch == nullptr)
+			// 	throw malloc_err;
+			// memset(isMatch, 0, maxSize);
+
+			badCharactor = (uint32_t *)malloc(asci_len * sizeof(uint32_t));
+			if(badCharactor == nullptr)
+				throw malloc_err;
+			memset(badCharactor, 0, asci_len);			
+		}
+
+		~BMMatch()
+		{
+			free(suffix);
+			free(badCharactor);
+			// free(isMatch);
+		}
+	
+	private:
+		uint32_t getMoveStep(int errIdx, int pattLen)
+		{
+			//move by good-suffix
+			int idx = pattLen - 1 - errIdx;
+
+			while(idx > 0){
+			
+			if(suffix[idx] != -1)
+				return errIdx - (suffix[idx] -1);
+			else
+				idx--;
+			}
+
+			return pattLen;
+		}
+
+	public:
+		Status BM_init(const std::string pattern)
+		{
+			int patt_len = pattern.length();
+
+			//record idx of each charactor in pattern 			
+			int i;
+			for(i=0; i< maxSize; i++){
+				int asci = (int)pattern[i];
+				badCharactor[asci] = i;
+			}
+
+			for(i = 0; i< pattern.length(); i++){
+				int ii = i, len = 0;
+				while(i>=0 && pattern[patt_len - 1 - len] == pattern[i]){
+					
+					suffix[len] = i--;			
+					len++;
+				}
+			}
+
+			return success;
+		}
+
+		Status BM_match(const std::string orignal_str, std::string pattern)
+		{
+			int idx =0;
+			int patt_len = pattern.length(), orignal_len = orignal_str.length();
+			while(idx < orignal_len - patt_len){
+
+				int i;
+				for(i=patt_len-1;)
+				
+			}
+
+
+		}
+
+
+	};
 };
+
+
