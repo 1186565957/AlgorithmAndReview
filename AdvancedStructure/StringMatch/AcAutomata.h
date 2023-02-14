@@ -4,6 +4,7 @@
 #include <string>
 #include <queue>
 #include <vector>
+#include <cstring>
 
 #include <algorithm>
 #include <functional>
@@ -301,20 +302,27 @@ namespace StringMatch
 		}
 	
 	private:
-		uint32_t getMoveStep(int errIdx, int pattLen)
+		uint32_t getMoveStep(int errIdx, int pattLen, int idx, int pidx)
 		{
+			int max = 0;
+
 			//move by good-suffix
 			int idx = pattLen - 1 - errIdx;
-
 			while(idx > 0){
 			
 			if(suffix[idx] != -1)
-				return errIdx - (suffix[idx] -1);
+				max = std::max(max, max, (errIdx - (suffix[idx] -1)));
 			else
 				idx--;
 			}
 
-			return pattLen;
+			//Judge the bad-charactor
+			max = std::max(max, (int)(idx +(pidx - badCharactor[errIdx])));
+
+			if(max <= 0)
+				max = pattLen;
+
+			return max;
 		}
 
 	public:
@@ -341,21 +349,29 @@ namespace StringMatch
 			return success;
 		}
 
-		Status BM_match(const std::string orignal_str, std::string pattern)
+		int BM_match(const std::string orignal_str, std::string pattern)
 		{
+			int ret;
+			ret = BM_init(pattern);
+
 			int idx =0;
 			int patt_len = pattern.length(), orignal_len = orignal_str.length();
 			while(idx < orignal_len - patt_len){
 
 				int i;
-				for(i=patt_len-1;)
-				
+				for(i=patt_len-1; i >=0; i--){
+					
+					if(pattern[i] != orignal_str[i+idx])
+						break;						
+				}
+				if(i < 0) //match success
+					return idx;
+			
+				idx += getMoveStep(idx+i, patt_len, idx, i);	
 			}
 
-
+			return -1;
 		}
-
-
 	};
 };
 
