@@ -339,31 +339,3 @@ int dynamicBackpack(int maxWeight, std::vector<std::pair<int,int>> goods){
     return tempt[maxWeight][goods.size()];
 }
 #pragma endregion
-
-int main(){
-
-    //int nums1[]={4,2,7,1,10,7,234},nums2[]={1,3,4,2};
-    //findBiggerElement(nums1,nums2,sizeof(nums1)/sizeof(nums1[0]),sizeof(nums2)/sizeof(nums2[0]));
-    //fast_Sort(nums1,0,8);
-    //quickSortThreeTerms(nums1,0,8);
-    //string str="stirngmmmmmjsjjmmmsjjjmmmmmmm123";
-    //string flag="mmm";
-    //vector<string> m=Split(str,flag);
-    //binarySearch(nums1,0,8,11);
-
-    // std::vector<int> m ={3};
-    // std::vector<int> s={1};
-    // int x=1;
-
-    //std::vector<std::vector<int>> n={{4,5},{4,6},{6,7},{2,3},{1,1}};
-    //findMaxConsecutiveOnes(n);
-    //longestOnes(n,2);
-    //InorderTraversing(CreateBSTree(nums1,7));
-    //makesquare(m);
-    //lengthOfLIS(n);
-    //maxEnvelopes(n);
-    //nextGreaterElements(m);
-    //maxSatisfied(m,s,x);
-
-    return 0;
-}

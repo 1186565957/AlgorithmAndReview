@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <vector>
+#include <stack>
 
 //为解决快速排序的重复元素问题，需要三项排序
 //变成大于当前、等于当前、小于当前元素的三种排序
@@ -32,7 +33,6 @@ T *quickSortThreeTerms(T *array,size_t begin,size_t end){
     
     quickSortThreeTerms(array,n+1,end);
 }
-
 
 ///归并排序，分治思维的体现
 //需要借助额外的内存空间，是稳定排序，复杂度为nlogn
@@ -107,6 +107,89 @@ void BucketSort(T A[],int left,int right){
         
     }
 }
+
+//荷兰国旗问题，红白蓝国旗，给错综复杂的条，让你排序
+//其实就是重复元素排序的问题
+//快速排序就是解决很多次的国旗问题
+
+///快排三重循环，头要小于尾；交换之后基准会变化，所以基准的值 意义不大
+///还要保证在同一个位置的时候不会发生交换的问题。并且基准取得值不能再头和尾
+//不能解决包括重复的问题，所以用到了三项排序。
+//时间在nlogn,n^2之间
+template<class T>
+T* fast_Sort(T *array,size_t begin,size_t end){
+    if(begin>=end)
+        return nullptr;
+    int randomNum =rand()%(end-begin+1)+begin;
+    size_t i=begin,j=end;
+    while(i!=j){
+        while(array[i]<=array[randomNum]&&i<randomNum){           
+            i++;
+        }
+        while(array[j]>=array[randomNum]&&j>randomNum){
+            j--;
+        }
+        if(i!=j)                      
+            swap(array[j],array[i]);              
+    } 
+    if(randomNum !=0)
+        fast_Sort(array,begin,randomNum-1);
+    if(randomNum!=end)
+        fast_Sort(array,randomNum+1,end);  
+    return array;
+}
+
+
+/// @brief unrecurse fastSort, depending on the stack
+/// @param item The data to be sorted
+/// @param len  the number of data
+/// @return the result 
+bool unrecurs_fastSort(uint32_t *item, uint32_t len){
+
+    //record the idx
+    std::stack<int> istack;
+    istack.push(0);
+    istack.push(len-1);
+
+    uint32_t right, left;
+    while(!istack.empty()){
+
+        right = istack.top();
+        istack.pop();
+        left = istack.top();
+        istack.pop();
+
+        //Moving the bars for the item-data
+        auto keyidx = [item, left, right]()->uint32_t{
+            uint32_t current = left;
+            uint32_t key = item[right];
+            uint32_t bars = left-1;
+
+            while(current < right){
+                if(item[current] < key){
+                    bars++;
+                    std::swap(item[current], item[bars]);
+                }
+                current++;
+            }
+
+            //for key
+            bars++;
+            std::swap(item[bars], key);
+            return bars;
+        };
+
+        if(left < keyidx()-1){
+            istack.push(left);
+            istack.push(keyidx()-1);
+        }
+        if(keyidx()+1 <right){
+            istack.push(keyidx()-1);
+            istack.push(right);
+        }
+    }
+}
+
 #pragma endregion
 
 #pragma region 检索算法
@@ -175,34 +258,3 @@ std::vector<T> InsertionSearch(T *array,size_t low,size_t high,size_t flag){
     return result;
 }
 
-
-//荷兰国旗问题，红白蓝国旗，给错综复杂的条，让你排序
-//其实就是重复元素排序的问题
-//快速排序就是解决很多次的国旗问题
-
-///快排三重循环，头要小于尾；交换之后基准会变化，所以基准的值 意义不大
-///还要保证在同一个位置的时候不会发生交换的问题。并且基准取得值不能再头和尾
-//不能解决包括重复的问题，所以用到了三项排序。
-//时间在nlogn,n^2之间
-template<class T>
-T* fast_Sort(T *array,size_t begin,size_t end){
-    if(begin>=end)
-        return nullptr;
-    int randomNum =rand()%(end-begin+1)+begin;
-    size_t i=begin,j=end;
-    while(i!=j){
-        while(array[i]<=array[randomNum]&&i<randomNum){           
-            i++;
-        }
-        while(array[j]>=array[randomNum]&&j>randomNum){
-            j--;
-        }
-        if(i!=j)                      
-            swap(array[j],array[i]);              
-    } 
-    if(randomNum !=0)
-        fast_Sort(array,begin,randomNum-1);
-    if(randomNum!=end)
-        fast_Sort(array,randomNum+1,end);  
-    return array;
-}
