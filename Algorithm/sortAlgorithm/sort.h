@@ -201,7 +201,7 @@ std::vector<T> binarySearch(T *array,size_t low,size_t high,size_t flag){
     std::vector<T> result;
     quickSortThreeTerms(array,0,9); 
 
-    while(low<=high){
+    while(low<high){
         mid = (high+low)/2+1;
         if(array[mid] == flag){
             result.push_back(mid);
